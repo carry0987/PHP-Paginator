@@ -1,13 +1,4 @@
-# PHP-Paginator
-A library for create and manage pagination
-
-## Installation
-```bash
-composer require carry0987/paginator
-```
-
-## Usage
-```php
+<?php
 require dirname(__DIR__).'/vendor/autoload.php';
 
 use carry0987\Paginator;
@@ -29,10 +20,7 @@ $prev_page = $paginator->getPrevUrl();
 $next_page = $paginator->getNextUrl();
 $first_page = $paginator->getFirstPageUrl();
 $last_page = $paginator->getLastPageUrl();
-```
-
-template
-```php
+?>
 <html>
     <head>
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
@@ -70,4 +58,3 @@ template
         </p>
     </body>
 </html>
-```
