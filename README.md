@@ -1,4 +1,5 @@
 # PHP-Paginator
+[![Packgist](https://img.shields.io/packagist/v/carry0987/paginator.svg?style=flat-square)](https://packagist.org/packages/carry0987/paginator)  
 A library for create and manage pagination
 
 ## Installation
