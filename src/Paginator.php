@@ -11,6 +11,9 @@ class Paginator
     private $currentPage;
     private $urlPattern = null;
     private $maxPagesToShow = 10;
+    private $page = null;
+    private $pages = null;
+    private $start = null;
 
     /**
      * @param array $totalItem The total number of items
