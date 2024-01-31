@@ -11,7 +11,7 @@ composer require carry0987/paginator
 ```php
 require dirname(__DIR__).'/vendor/autoload.php';
 
-use carry0987\Paginator;
+use carry0987\Paginator\Paginator;
 
 //Use for loop to create variable $totalItems that have 1000 items
 $totalItems = array();
