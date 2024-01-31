@@ -101,8 +101,8 @@ class Paginator
      */
     public function setTotalItem(int $totalItem): self
     {
-        if ($totalItem <= 0) {
-            throw new PaginatorException('The value of [TotalItem] cannot be less than 1');
+        if ($totalItem < 0) {
+            throw new PaginatorException('The value of [TotalItem] cannot be less than 0');
         }
         $this->totalItem = $totalItem;
         $this->updateNumPage();
@@ -260,11 +260,11 @@ class Paginator
      *
      * @return array
      */
-    public function getPage(): array
+    private function calculatePage(): array
     {
-        $pages = array();
+        $pages = [];
         if ($this->totalPage <= 1) {
-            return array();
+            return [];
         }
         if ($this->totalPage <= $this->maxPagesToShow) {
             for ($i = 1; $i <= $this->totalPage; $i++) {
@@ -306,6 +306,14 @@ class Paginator
         }
 
         return $pages;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPage(): array
+    {
+        return $this->calculatePage();
     }
 
     /**
