@@ -6,32 +6,34 @@ use carry0987\Paginator\Exceptions\PaginatorException;
 class Paginator
 {
     private const NUM_PLACEHOLDER = '(:num)';
-    private $itemArray;
-    private $totalItem;
-    private $totalPage;
-    private $itemsPerPage;
-    private $currentPage;
-    private $urlPattern = null;
-    private $maxPagesToShow = 10;
-    private $page = null;
-    private $start = null;
+    private array $itemArray;
+    private int $totalItem = 0;
+    private int $totalPage = 0;
+    private int $itemsPerPage = 0;
+    private int $currentPage = 1;
+    private ?string $urlPattern = null;
+    private int $maxPagesToShow = 10;
 
     /**
-     * @param array $totalItem The total number of items
+     * @param array $itemArray An array of items to paginate
      * @param int $itemsPerPage The number of items per page
      * @param int $currentPage The current page number
      * @param string $urlPattern A URL for each page, with (:num) as a placeholder for the page number. Ex. '/foo/page/(:num)'
      */
-    public function __construct(array $totalItem, int $itemsPerPage, int $currentPage, string $urlPattern = '')
+    public function __construct(array $itemArray, int $itemsPerPage, int $currentPage, string $urlPattern = '')
     {
-        $this->itemArray = $totalItem;
-        $this->totalItem = count($totalItem);
-        $this->itemsPerPage = $itemsPerPage;
-        $this->currentPage = $currentPage;
-        $this->urlPattern = $urlPattern;
-        $this->updateNumPage();
+        $this->itemArray = $itemArray;
+        $this->setTotalItem(count($itemArray))
+            ->setCurrentPage($currentPage)
+            ->setUrlPattern($urlPattern)
+            ->setItemsPerPage($itemsPerPage);
     }
 
+    /**
+     * Update the total number of pages.
+     * 
+     * @return void
+     */
     private function updateNumPage(): void
     {
         $this->totalPage = ($this->itemsPerPage === 0) ? 0 : (int) ceil($this->totalItem / $this->itemsPerPage);
@@ -66,9 +68,56 @@ class Paginator
      * 
      * @return Paginator
      */
-    public function setCurrentPage(int $currentPage): Paginator
+    public function setCurrentPage(int $currentPage): self
     {
+        if ($currentPage <= 0) {
+            throw new PaginatorException('The value of [CurrentPage] cannot be less than 1');
+        }
         $this->currentPage = $currentPage;
+
+        return $this;
+    }
+
+    /**
+     * @param int $itemsPerPage
+     * 
+     * @return Paginator
+     */
+    public function setItemsPerPage(int $itemsPerPage): self
+    {
+        if ($itemsPerPage <= 0) {
+            throw new PaginatorException('The value of [ItemsPerPage] cannot be less than 1');
+        }
+        $this->itemsPerPage = $itemsPerPage;
+        $this->updateNumPage();
+
+        return $this;
+    }
+
+    /**
+     * @param int $totalItem
+     * 
+     * @return Paginator
+     */
+    public function setTotalItem(int $totalItem): self
+    {
+        if ($totalItem <= 0) {
+            throw new PaginatorException('The value of [TotalItem] cannot be less than 1');
+        }
+        $this->totalItem = $totalItem;
+        $this->updateNumPage();
+
+        return $this;
+    }
+
+    /**
+     * @param string $urlPattern A URL for each page, with (:num) as a placeholder for the page number. Ex. '/foo/page/(:num)'
+     * 
+     * @return Paginator
+     */
+    public function setUrlPattern(string $urlPattern): self
+    {
+        $this->urlPattern = $urlPattern;
 
         return $this;
     }
@@ -82,37 +131,11 @@ class Paginator
     }
 
     /**
-     * @param int $itemsPerPage
-     * 
-     * @return Paginator
-     */
-    public function setItemsPerPage(int $itemsPerPage): Paginator
-    {
-        $this->itemsPerPage = $itemsPerPage;
-        $this->updateNumPage();
-
-        return $this;
-    }
-
-    /**
      * @return int
      */
     public function getItemsPerPage(): int
     {
         return $this->itemsPerPage;
-    }
-
-    /**
-     * @param int $totalItem
-     * 
-     * @return Paginator
-     */
-    public function setTotalItem(int $totalItem): Paginator
-    {
-        $this->totalItem = $totalItem;
-        $this->updateNumPage();
-
-        return $this;
     }
 
     /**
@@ -132,18 +155,6 @@ class Paginator
     }
 
     /**
-     * @param string $urlPattern A URL for each page, with (:num) as a placeholder for the page number. Ex. '/foo/page/(:num)'
-     * 
-     * @return Paginator
-     */
-    public function setUrlPattern(string $urlPattern): Paginator
-    {
-        $this->urlPattern = $urlPattern;
-
-        return $this;
-    }
-
-    /**
      * @return string
      */
     public function getUrlPattern(): string
@@ -156,7 +167,7 @@ class Paginator
      * 
      * @return string
      */
-    private function getPageUrl(int $pageNum): string
+    public function getPageUrl(int $pageNum): string
     {
         return str_replace(self::NUM_PLACEHOLDER, $pageNum, $this->urlPattern);
     }
@@ -364,14 +375,10 @@ class Paginator
      */
     public function getResult(): array
     {
-        $this->page = $this->currentPage;
-        if (empty($this->currentPage)) {
-            $this->page = 1;
-        }
-        $this->pages = ceil($this->totalItem / $this->itemsPerPage);
-        $this->start = ceil(($this->page - 1) * $this->itemsPerPage);
+        $page = $this->getCurrentPage();
+        $start = ceil(($page - 1) * $this->itemsPerPage);
         if ($this->totalItem > 0) {
-            return array_slice($this->itemArray, $this->start, $this->itemsPerPage);
+            return array_slice($this->itemArray, $start, $this->itemsPerPage);
         }
 
         return [];
