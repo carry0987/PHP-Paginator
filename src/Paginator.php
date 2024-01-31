@@ -13,6 +13,7 @@ class Paginator
     private int $currentPage = 1;
     private ?string $urlPattern = null;
     private int $maxPagesToShow = 10;
+    private bool $alwaysShowPagination = false;
 
     /**
      * @param array $itemArray An array of items to paginate
@@ -30,13 +31,15 @@ class Paginator
     }
 
     /**
-     * Update the total number of pages.
+     * @param bool $alwaysShow Set to true to always show pagination controls, even if there's only one page
      * 
-     * @return void
+     * @return Paginator
      */
-    private function updateNumPage(): void
+    public function setAlwaysShowPagination(bool $alwaysShow): self
     {
-        $this->totalPage = ($this->itemsPerPage === 0) ? 0 : (int) ceil($this->totalItem / $this->itemsPerPage);
+        $this->alwaysShowPagination = $alwaysShow;
+
+        return $this;
     }
 
     /**
@@ -245,107 +248,11 @@ class Paginator
     }
 
     /**
-     * Get an array of paginated page data.
-     *
-     * Example:
-     * array(
-     *     array ('num' => 1,     'url' => '/example/page/1',  'isCurrent' => false),
-     *     array ('num' => '...', 'url' => NULL,               'isCurrent' => false),
-     *     array ('num' => 3,     'url' => '/example/page/3',  'isCurrent' => false),
-     *     array ('num' => 4,     'url' => '/example/page/4',  'isCurrent' => true ),
-     *     array ('num' => 5,     'url' => '/example/page/5',  'isCurrent' => false),
-     *     array ('num' => '...', 'url' => NULL,               'isCurrent' => false),
-     *     array ('num' => 10,    'url' => '/example/page/10', 'isCurrent' => false),
-     * )
-     *
-     * @return array
-     */
-    private function calculatePage(): array
-    {
-        $pages = [];
-        if ($this->totalPage <= 1) {
-            return [];
-        }
-        if ($this->totalPage <= $this->maxPagesToShow) {
-            for ($i = 1; $i <= $this->totalPage; $i++) {
-                $pages[] = $this->createPage($i, $i === $this->currentPage);
-            }
-        } else {
-            //Determine the sliding range, centered around the current page
-            $numAdjacents = (int) floor(($this->maxPagesToShow - 3) / 2);
-            if ($this->currentPage + $numAdjacents > $this->totalPage) {
-                $slidingStart = $this->totalPage - $this->maxPagesToShow + 2;
-            } else {
-                $slidingStart = $this->currentPage - $numAdjacents;
-            }
-            if ($slidingStart < 2) {
-                $slidingStart = 2;
-            }
-            $slidingEnd = $slidingStart + $this->maxPagesToShow - 3;
-            if ($slidingEnd >= $this->totalPage) {
-                $slidingEnd = $this->totalPage - 1;
-            }
-            //Build the list of pages
-            $num_middle = $this->maxPagesToShow - 2;
-            //Create first page
-            $pages[] = $this->createPage(1, $this->currentPage === 1);
-            if ($slidingStart > 2) {
-                $pages[] = $this->createPageEllipsis();
-            }
-            if (($slidingEnd - $slidingStart + 1) < $num_middle) {
-                $slidingStart -= ($num_middle - ($slidingEnd - $slidingStart + 1));
-            }
-            for ($i = $slidingStart; $i <= $slidingEnd; $i++) {
-                $pages[] = $this->createPage($i, $this->currentPage === $i);
-            }
-            if ($slidingEnd < $this->totalPage - 1) {
-                $pages[] = $this->createPageEllipsis();
-            }
-            //Create last page
-            $pages[] = $this->createPage($this->totalPage, $this->currentPage === $this->totalPage);
-        }
-
-        return $pages;
-    }
-
-    /**
      * @return array
      */
     public function getPage(): array
     {
         return $this->calculatePage();
-    }
-
-    /**
-     * Create a page data structure.
-     *
-     * @param int $page_num
-     * @param bool $is_current
-     * @return array
-     */
-    private function createPage(int $page_num, bool $is_current = false): array
-    {
-        return array(
-            'num' => $page_num,
-            'url' => $this->getPageUrl($page_num),
-            'is_current' => $is_current
-        );
-    }
-
-    /**
-     * Create an ellipsis data structure.
-     * 
-     * @param string $ellipsis
-     * 
-     * @return array
-     */
-    private function createPageEllipsis(string $ellipsis = '...'): array
-    {
-        return array(
-            'num' => $ellipsis,
-            'url' => null,
-            'is_current' => false
-        );
     }
 
     /**
@@ -411,5 +318,111 @@ class Paginator
         $total_item = $this->getTotalItem();
 
         return [$result, $total_page, $total_item];
+    }
+
+    /**
+     * Update the total number of pages.
+     * 
+     * @return void
+     */
+    private function updateNumPage(): void
+    {
+        $this->totalPage = ($this->itemsPerPage === 0) ? 0 : (int) ceil($this->totalItem / $this->itemsPerPage);
+    }
+
+    /**
+     * Create a page data structure.
+     *
+     * @param int $page_num
+     * @param bool $is_current
+     * @return array
+     */
+    private function createPage(int $page_num, bool $is_current = false): array
+    {
+        return array(
+            'num' => $page_num,
+            'url' => $this->getPageUrl($page_num),
+            'is_current' => $is_current
+        );
+    }
+
+    /**
+     * Create an ellipsis data structure.
+     * 
+     * @param string $ellipsis
+     * 
+     * @return array
+     */
+    private function createPageEllipsis(string $ellipsis = '...'): array
+    {
+        return array(
+            'num' => $ellipsis,
+            'url' => null,
+            'is_current' => false
+        );
+    }
+
+    /**
+     * Get an array of paginated page data.
+     *
+     * Example:
+     * array(
+     *     array ('num' => 1,     'url' => '/example/page/1',  'isCurrent' => false),
+     *     array ('num' => '...', 'url' => NULL,               'isCurrent' => false),
+     *     array ('num' => 3,     'url' => '/example/page/3',  'isCurrent' => false),
+     *     array ('num' => 4,     'url' => '/example/page/4',  'isCurrent' => true ),
+     *     array ('num' => 5,     'url' => '/example/page/5',  'isCurrent' => false),
+     *     array ('num' => '...', 'url' => NULL,               'isCurrent' => false),
+     *     array ('num' => 10,    'url' => '/example/page/10', 'isCurrent' => false),
+     * )
+     *
+     * @return array
+     */
+    private function calculatePage(): array
+    {
+        $pages = [];
+        if ($this->totalPage <= 1 && !$this->alwaysShowPagination) {
+            return [];
+        }
+        if ($this->totalPage <= $this->maxPagesToShow) {
+            for ($i = 1; $i <= $this->totalPage; $i++) {
+                $pages[] = $this->createPage($i, $i === $this->currentPage);
+            }
+        } else {
+            //Determine the sliding range, centered around the current page
+            $numAdjacents = (int) floor(($this->maxPagesToShow - 3) / 2);
+            if ($this->currentPage + $numAdjacents > $this->totalPage) {
+                $slidingStart = $this->totalPage - $this->maxPagesToShow + 2;
+            } else {
+                $slidingStart = $this->currentPage - $numAdjacents;
+            }
+            if ($slidingStart < 2) {
+                $slidingStart = 2;
+            }
+            $slidingEnd = $slidingStart + $this->maxPagesToShow - 3;
+            if ($slidingEnd >= $this->totalPage) {
+                $slidingEnd = $this->totalPage - 1;
+            }
+            //Build the list of pages
+            $num_middle = $this->maxPagesToShow - 2;
+            //Create first page
+            $pages[] = $this->createPage(1, $this->currentPage === 1);
+            if ($slidingStart > 2) {
+                $pages[] = $this->createPageEllipsis();
+            }
+            if (($slidingEnd - $slidingStart + 1) < $num_middle) {
+                $slidingStart -= ($num_middle - ($slidingEnd - $slidingStart + 1));
+            }
+            for ($i = $slidingStart; $i <= $slidingEnd; $i++) {
+                $pages[] = $this->createPage($i, $this->currentPage === $i);
+            }
+            if ($slidingEnd < $this->totalPage - 1) {
+                $pages[] = $this->createPageEllipsis();
+            }
+            //Create last page
+            $pages[] = $this->createPage($this->totalPage, $this->currentPage === $this->totalPage);
+        }
+
+        return $pages;
     }
 }
