@@ -6,7 +6,7 @@ class PaginatorException extends \Exception
     public $errorInfo;
 
     // Override constructor to pass error information
-    public function __construct(string $message, mixed $code = 0, $errorInfo = [])
+    public function __construct(string $message, $code = 0, $errorInfo = [])
     {
         parent::__construct($message, (int) $code);
         $this->errorInfo = $errorInfo;
