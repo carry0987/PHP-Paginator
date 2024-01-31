@@ -1,7 +1,7 @@
 <?php
 require dirname(__DIR__).'/vendor/autoload.php';
 
-use carry0987\Paginator;
+use carry0987\Paginator\Paginator;
 
 //Use for loop to create variable $totalItems that have 1000 items
 $totalItems = array();
@@ -13,6 +13,7 @@ $currentPage = isset($_GET['page']) ? (int) $_GET['page'] : 8;
 $urlPattern = '?page=(:num)';
 
 $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
+$paginator->setMaxPagesToShow(10);
 
 $get_all_page = $paginator->getPage();
 $total_page = $paginator->getTotalPage();
